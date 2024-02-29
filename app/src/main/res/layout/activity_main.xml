@@ -14,46 +14,20 @@
         android:layout_centerInParent="true"
         android:src="@drawable/boy_recording1" />
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/text_headline"
-        style="@style/TextAppearance.AppCompat.Headline"
-        android:layout_width="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginEnd="8dp"
-        android:elevation="4dp"
-        android:text="Let's get set\n recording \n Sound"
-        android:textAlignment="center"
-        android:textColor="@color/black"
-        android:textStyle="bold" />
+        android:layout_above="@id/btn_play"
+        android:layout_alignParentTop="true"
+        android:layout_marginBottom="16dp"
+        tools:listitem="@layout/recording_item"
+        android:layout_marginTop="10dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_start"
-        style="@style/Widget.MaterialComponents.Button"
-        android:layout_width="150dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="32dp"
-        android:clickable="true"
-        android:elevation="4dp"
-        android:focusable="true"
-        android:padding="10dp"
-        android:text="Start"
-        android:textAlignment="center"
-        android:textAllCaps="false"
-        android:textStyle="bold"
-        android:visibility="visible"
-        app:cornerRadius="16dp"
-        app:icon="@drawable/ic_baseline_mic_24"
-        app:iconGravity="textStart"
-        app:iconTint="@color/white"
-        app:rippleColor="@color/purple_200" />
+
+
 
 
     <com.google.android.material.button.MaterialButton
@@ -78,6 +52,69 @@
         app:icon="@drawable/ic_baseline_resume_24"
         app:iconGravity="textStart"
         app:iconTint="@color/purple_500" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="5"
+        android:layout_alignParentBottom="true"
+
+
+        >
+        <ImageView
+            android:id="@+id/child"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/child"
+
+            android:layout_weight="1"/>
+        <ImageView
+            android:id="@+id/men"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/men"
+            android:layout_weight="1"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_start"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="32dp"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:padding="10dp"
+            android:text="Start"
+            android:textAlignment="center"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:visibility="visible"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_baseline_mic_24"
+            app:iconGravity="textStart"
+            app:iconTint="@color/white"
+            app:rippleColor="@color/purple_200" />
+        <ImageView
+            android:id="@+id/ghost"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ghost"
+            android:layout_weight="1"/>
+        <ImageView
+            android:id="@+id/women"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/women"
+            android:layout_weight="1"/>
+
+
+    </LinearLayout>
 
 
     <com.google.android.material.button.MaterialButton
