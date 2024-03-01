@@ -14,21 +14,19 @@ class RecordingAdapter(
 
     inner class RecordingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         init {
-            // Set click listener on item view
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val recording = recordings[position]
-                    onItemClick(recording) // Invoke item click listener
+                    onItemClick(recording)
                 }
             }
 
-            // Set long click listener on item view
             itemView.setOnLongClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val recording = recordings[position]
-                    onItemLongClick(recording) // Invoke item long click listener
+                    onItemLongClick(recording)
                     return@setOnLongClickListener true
                 }
                 return@setOnLongClickListener false

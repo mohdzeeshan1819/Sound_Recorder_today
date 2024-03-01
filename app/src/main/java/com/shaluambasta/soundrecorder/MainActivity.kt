@@ -5,16 +5,18 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.media.PlaybackParams
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -23,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
@@ -43,11 +46,24 @@ class MainActivity : AppCompatActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var playState: Boolean = false
+    private var isAudioAdded = false
 
     private var count: Int = 1
+    var commonUri:Uri? =null
 
 
-    // Update this function to set the filename with the count
+    private var audioFilePath: String? = null
+
+    private val audioPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data: Intent? = result.data
+            data?.data?.let { uri ->
+                audioFilePath = uri.toString() // Save the URI of the selected audio file
+            }
+        }
+    }
+
+
     private fun generateFileName(): String {
         return "${externalCacheDir?.absolutePath}/record$count.mp3"
     }
@@ -59,6 +75,8 @@ class MainActivity : AppCompatActivity() {
         val men = findViewById<ImageView>(R.id.men)
        val ghost = findViewById<ImageView>(R.id.ghost)
         val women = findViewById<ImageView>(R.id.women)
+        val folder = findViewById<ImageView>(R.id.folder)
+
 
         imgBackground = findViewById(R.id.img_background)
         btnStart = findViewById(R.id.btn_start)
@@ -104,60 +122,143 @@ class MainActivity : AppCompatActivity() {
 
         }
         child.setOnClickListener(){
-            child()
+//            child()
+            mediaPlayer?.stop()
+            commonUri?.let { it1 -> song(it1,2.0,1.0) }
         }
         men.setOnClickListener(){
-            men()
+//            men()
+            stopPlayback()
+            commonUri?.let { it1 -> song(it1,0.8,1.0) 
+            }
+
         }
         ghost.setOnClickListener(){
-            ghost()
+//                ghost()
+            stopPlayback()
+            commonUri?.let { it1 -> song(it1,0.7,1.0)
+            }
+
         }
         women.setOnClickListener(){
-            women()
+            mediaPlayer?.stop()
+//            women()
+            commonUri?.let { it1 -> song(it1,2.5,1.0) }
+
+        }
+        folder.setOnClickListener(){
+            val intent_upload = Intent()
+            intent_upload.setType("audio/*")
+            intent_upload.setAction(Intent.ACTION_GET_CONTENT)
+            startActivityForResult(intent_upload, 1)
+            setUpRecyclerView()
         }
     }
 
-
-    private fun child(){
-        if(fileName!=null){
-        startPlaying(fileName,null, pitch = 1.5f, speed = 1.0f)}
-        else{
-            startPlaying(null, Uri.parse(fileName), pitch = 1.5f, speed = 1.0f)}
-
+    private fun stopPlayback() {
+        mediaPlayer?.apply {
+            if (isPlaying) {
+                stop()
+            }
+            release()
+        }
+        mediaPlayer = null
     }
 
+    private fun song(commonUri:Uri,pitch: Double, speed: Double) {
+        mediaPlayer?.stop()
+        if (fileName.isNotEmpty()) {
+            val mediaPlayer = MediaPlayer()
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC)
+            mediaPlayer.setDataSource(applicationContext, commonUri)
+            mediaPlayer.prepare()
 
-    private fun men(){
-        if(fileName!=null){
-            startPlaying(fileName,Uri.parse(fileName), pitch = 1.5f, speed = 1.0f)}
-        else{
-            startPlaying(fileName, Uri.parse(fileName), pitch = 1.5f, speed = 1.0f)}
-    }  private fun women(){
-
-        if(fileName!=null){
-            startPlaying(fileName,Uri.parse(fileName), pitch = 2.0f, speed = 1.0f)}
-        else{
-            startPlaying(fileName, Uri.parse(fileName), pitch = 2.5f, speed = 1.0f)}
-    }  private fun ghost(){
-//        startPlaying(fileName, pitch = 0.5f, speed = 1.0f) // Adjust pitch to 1.2 times higher and speed to 80% of normal speed
-        selectAudio()
+            // Adjust pitch and speed
+            val playbackParams = PlaybackParams().apply {
+                setPitch(pitch.toFloat())  // Adjust pitch
+                setSpeed(speed.toFloat())  // Adjust speed
+            }
+            mediaPlayer.playbackParams = playbackParams
+            mediaPlayer.start()
+        } else {
+            Toast.makeText(this, "File not found", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    fun selectAudio() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.type = "audio/*"
-        startActivityForResult(intent, REQUEST_CODE_PICK_AUDIO)
-    }
-
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_PICK_AUDIO && resultCode == Activity.RESULT_OK) {
-            data?.data?.let { uri ->
-                // Pass the file path, pitch, and speed to the startPlaying function
-                    startPlaying(null,uri, pitch = 1.0f, speed = 1.0f)
+
+        if(requestCode==1){
+
+            if (resultCode === RESULT_OK) {
+
+                //the selected audio.
+                val uri: Uri? = data?.data
+
+                if(uri != null)
+                {
+                    commonUri= uri
+                }
             }
         }
     }
+
+
+
+    private fun child() {
+        mediaPlayer?.stop()
+
+
+        startPlaying(fileName, pitch = 1.5f, speed = 1.0f)
+    }
+    private fun men(){
+        mediaPlayer?.stop()
+
+
+        startPlaying(fileName, pitch = 1.0f, speed = 1.0f)
+    }
+    private fun women(){
+        mediaPlayer?.stop()
+
+
+        startPlaying(fileName, pitch = 2.5f, speed = 1.0f)
+    }
+    private fun ghost(){
+        mediaPlayer?.stop()
+        startPlaying(fileName, pitch = 0.8f, speed = 1.0f)
+    }
+    private fun folder(){
+        selectAudio()
+        playAudio()
+
+
+    }
+
+
+    private fun selectAudio() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "audio/*"
+        audioPickerLauncher.launch(intent)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PICK_AUDIO) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            } else {
+            }
+        }
+        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_CODE_PICK_AUDIO)
+
+    }
+
+
 
 
 
@@ -165,7 +266,6 @@ class MainActivity : AppCompatActivity() {
         startRecording()
     } else {
         stopRecording()
-        setUpRecyclerView()
 
 
     }
@@ -174,10 +274,10 @@ class MainActivity : AppCompatActivity() {
         fileName = generateFileName()
 
         mediaRecorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION) // Set audio source for noise cancellation
             setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
             setOutputFile(fileName)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB) // Set appropriate audio encoder
         }
 
         try {
@@ -203,7 +303,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, e.message.toString(), Toast.LENGTH_SHORT).show()
 
         }
+        isAudioAdded = false
     }
+
 
 
     private fun stopRecording() {
@@ -230,14 +332,25 @@ class MainActivity : AppCompatActivity() {
     private fun onPlay(start: Boolean) {
         if (start) {
             // Pass the file path of the recording to the startPlaying function
-            startPlaying(fileName,null, pitch = 0.5f, speed = 1.0f) // Adjust pitch to 1.2 times higher and speed to 80% of normal speed
+            startPlaying(fileName, pitch = 0.5f, speed = 1.0f) // Adjust pitch to 1.2 times higher and speed to 80% of normal speed
         } else {
             stopPlaying()
         }
+        isAudioAdded = false
+    }
+    private fun playAudio() {
+        audioFilePath?.let { path ->
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(path)
+                prepare()
+                start()
+            }
+        }
     }
 
-    private fun startPlaying(filePath: String?, audioUri: Uri?, pitch: Float, speed: Float) {
-        stopPlaying() // Stop any currently playing audio
+    private fun startPlaying(filePath: String?, pitch: Float, speed: Float) {
+        stopPlaying()
+        isAudioAdded = false
 
         try {
             currentMediaPlayer = MediaPlayer().apply {
@@ -248,26 +361,30 @@ class MainActivity : AppCompatActivity() {
                         .build()
                 )
 
-                // Set data source based on whether filePath or audioUri is provided
                 if (filePath != null) {
-                    setDataSource(filePath)
-                } else if (audioUri != null) {
-                    val contentResolver = applicationContext.contentResolver
-                    setDataSource(applicationContext, audioUri)
+                    if (File(filePath).exists()) {
+                        setDataSource(filePath)
+                    } else {
+                        // File does not exist, handle error
+                        Toast.makeText(this@MainActivity, "Recorded File not found ", Toast.LENGTH_SHORT).show()
+                        Log.d("file", File(filePath).exists().toString())
+                        return
+                    }
+                } else {
+                    Toast.makeText(this@MainActivity, "Invalid file path", Toast.LENGTH_SHORT).show()
+                    return
                 }
 
                 val playbackParams = PlaybackParams().apply {
-                    setPitch(pitch)  // Adjust pitch (1.0f is normal pitch)
-                    setSpeed(speed)  // Adjust speed (1.0f is normal speed)
+                    setPitch(pitch)
+                    setSpeed(speed)
                 }
 
-                setPlaybackParams(playbackParams) // Apply pitch and speed adjustments
-
+                setPlaybackParams(playbackParams)
                 prepare()
                 start()
             }
 
-            // Save the recording
             if (filePath != null) {
                 val recording = Recording(filePath)
                 saveRecording(recording)
@@ -280,9 +397,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveRecording(recording: Recording) {
-        recordings.add(recording)
-        recyclerView.adapter?.notifyDataSetChanged() // Notify adapter of dataset change
+        // Check if the recording already exists in the list
+        if (!recordings.contains(recording)) {
+            recordings.add(recording)
+            recyclerView.adapter?.notifyDataSetChanged() // Notify adapter of dataset change
+        }
     }
+
 
     private fun stopPlaying() {
         currentMediaPlayer?.release()
@@ -290,10 +411,12 @@ class MainActivity : AppCompatActivity() {
     }
     private fun setUpRecyclerView() {
         val adapter = RecordingAdapter(recordings,
-            onItemClick = { recording ->  startPlaying(fileName,Uri.parse(fileName), pitch = 1.2f, speed = 0.8f) },
+            onItemClick = { recording ->  startPlaying(fileName, pitch = 1.2f, speed = 0.8f) },
             onItemLongClick = { recording -> deleteRecording(recording) }
         )
         recyclerView.adapter = adapter
+        recyclerView.adapter?.notifyDataSetChanged()
+
     }
 
     private fun deleteRecording(recording: Recording) {
